@@ -27,3 +27,4 @@
 - [ ] Fix linking-code rejection by clarifying phone-number linking path and validating code expiry/format
 - [ ] Identify verified cause of WhatsApp rejecting generated linking codes without speculative retries
 - [x] Upgrade the pairing worker from Baileys 6.7.24 to upstream 7.0.0-rc14 and validate compatibility
+- [ ] Fix preview tRPC API Query Error: Failed to fetch at 2026-08-27 20:38:41 EAT
