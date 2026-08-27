@@ -1,0 +1,19 @@
+# Project TODO
+
+- [x] Private owner-authenticated access control
+- [ ] Owner-controlled requester approval and revocation flow
+- [x] Integrated server-side pairing worker with server-only credential handling
+- [x] Phone-number pairing request flow with validation and progress states
+- [x] Linked Devices instructions and pairing-code display
+- [x] Protected session credential reveal, copy, download, and warning flow
+- [x] Pairing success, expiration, and actionable error states
+- [x] Owner-facing recent pairing request history
+- [x] Cyberpunk Firebox HUD visual system and responsive layout
+- [x] Database schema and query helpers for pairing requests and access grants
+- [x] tRPC procedures for access control, pairing lifecycle, and history
+- [x] Vitest coverage for authorization, expiry, secret redaction, and pairing adapter behavior
+- [x] Browser verification at desktop and mobile breakpoints
+- [x] Final security review and setup documentation
+- [x] Replace external pairing-service configuration with an integrated server-side WhatsApp pairing worker
+- [x] Add persistent-hosting and secure session-storage setup guidance for the integrated worker
+- [x] Make Firebox the direct pairing page with no dependency on the original external portal
