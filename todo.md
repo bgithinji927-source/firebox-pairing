@@ -17,3 +17,4 @@
 - [x] Replace external pairing-service configuration with an integrated server-side WhatsApp pairing worker
 - [x] Add persistent-hosting and secure session-storage setup guidance for the integrated worker
 - [x] Make Firebox the direct pairing page with no dependency on the original external portal
+- [x] Create a private GitHub repository and push the validated Firebox pairing code without secrets
