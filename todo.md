@@ -22,3 +22,5 @@
 - [ ] Verify live WhatsApp linking-code issuance on the deployed persistent worker
 - [x] Diagnose and resolve persistent Baileys socket closure before linking-code issuance
 - [x] Rework live Baileys pairing initialization after deployed retry fix still returns Connection Closed
+- [ ] Resolve or isolate the still-failing live WhatsApp pairing flow with fresh production evidence
+- [ ] Diagnose and fix connection-close failure in the Firebox preview environment

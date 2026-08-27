@@ -1,4 +1,5 @@
 import makeWASocket, {
+  Browsers,
   DisconnectReason,
   useMultiFileAuthState,
 } from "@whiskeysockets/baileys";
@@ -66,7 +67,7 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   // Initial save is fire-and-forget for the worker loop
   db.savePairingRequest({ id, phone, status: "pending", expiresAt, requesterOpenId });
 
-  const socket = makeWASocket({ auth: state, logger });
+  const socket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
   sockets.set(id, socket);
   socket.ev.on("creds.update", saveCreds);
   let resolveReady: () => void = () => undefined;
@@ -94,7 +95,10 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
 
   if (!state.creds.registered) {
     try {
-      await Promise.race([socketReady, new Promise<void>(resolve => setTimeout(resolve, 4_000))]);
+      await Promise.race([socketReady, new Promise<void>(resolve => setTimeout(resolve, 10_000))]);
+      // WhatsApp can close the pre-auth socket if pairing is requested during the initial handshake.
+      // The ten-second delay mirrors the current Baileys pairing guidance for 401/428 responses.
+      await new Promise(resolve => setTimeout(resolve, 10_000));
       record.code = await retryPairingCode(() => socket.requestPairingCode(phone));
     } catch (error) {
       record.status = "failed";
