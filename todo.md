@@ -25,3 +25,5 @@
 - [ ] Resolve or isolate the still-failing live WhatsApp pairing flow with fresh production evidence
 - [ ] Diagnose and fix connection-close failure in the Firebox preview environment
 - [ ] Fix linking-code rejection by clarifying phone-number linking path and validating code expiry/format
+- [ ] Identify verified cause of WhatsApp rejecting generated linking codes without speculative retries
+- [x] Upgrade the pairing worker from Baileys 6.7.24 to upstream 7.0.0-rc14 and validate compatibility
