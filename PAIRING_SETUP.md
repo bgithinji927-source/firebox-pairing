@@ -1,6 +1,6 @@
 # Firebox direct pairing setup
 
-The site is now the direct pairing page. It no longer links to the original third-party pairing site. Authenticated owner accounts use the server-side `pairing` procedures to request a linking code, poll progress, and reveal a session credential once the WhatsApp connection is confirmed.
+The site is now the direct pairing page. It no longer links to the original third-party pairing site. Authenticated owner accounts use the server-side `pairing` procedures to request either a phone-number linking code or a QR pairing session, poll progress, and reveal a session credential once the WhatsApp connection is confirmed.
 
 ## Production requirement
 
@@ -8,7 +8,13 @@ The Baileys worker maintains a live WhatsApp connection and stores temporary aut
 
 ## Access model
 
-Pairing procedures are owner-only through the existing authenticated admin role. The owner must sign in through the built-in authentication flow. The owner account is promoted using the project owner identity configured in the environment. Before allowing additional operators, add a database-backed approval table and an admin-only grant/revoke interface.
+Pairing procedures require authentication. The owner signs in through the built-in authentication flow and can approve or revoke additional operators through the Access Control panel. Non-admin users can request approval and can only read their own pairing request status. The owner account is promoted using the project owner identity configured in the environment.
+
+## QR pairing mode
+
+Choose `QR SCAN` on the pairing console, then open WhatsApp → Settings → Linked devices → Link a device and scan the QR displayed by Firebox. QR values are rendered server-side, exposed only to the authorized requester, refreshed when WhatsApp emits a new QR, removed on expiry or successful linking, and never stored in the database. QR mode does not require a phone number.
+
+Phone-number code mode remains available, but current Baileys releases have open reports of WhatsApp rejecting accepted codes with “Couldn’t link device.” Use QR mode when code pairing fails.
 
 ## Secret handling
 
