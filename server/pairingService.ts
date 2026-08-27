@@ -7,16 +7,20 @@ import { Boom } from "@hapi/boom";
 import fs from "node:fs/promises";
 import path from "node:path";
 import P from "pino";
+import QRCode from "qrcode";
 import { nanoid } from "nanoid";
 import * as db from "./db";
 
 export type PairingStatus = "pending" | "linked" | "expired" | "failed";
+export type PairingMode = "code" | "qr";
 export type PairingRecord = {
   id: string;
   phone: string;
+  mode: PairingMode;
   requesterOpenId: string;
   status: PairingStatus;
   code?: string;
+  qr?: string;
   expiresAt: number;
   session?: string;
   error?: string;
@@ -32,6 +36,10 @@ export function normalizePhone(input: string) {
   const phone = input.replace(/[^0-9]/g, "");
   if (phone.length < 10 || phone.length > 15) throw new Error("Use a valid phone number with country code.");
   return phone;
+}
+
+export function renderPairingQr(value: string) {
+  return QRCode.toDataURL(value, { width: 320, margin: 1, errorCorrectionLevel: "M" });
 }
 
 export async function retryPairingCode(requestCode: () => Promise<string>, attempts = 2) {
@@ -63,14 +71,14 @@ async function safeSavePairing(input: Parameters<typeof db.savePairingRequest>[0
   }
 }
 
-export async function createPairing(phoneInput: string, requesterOpenId: string): Promise<PairingRecord> {
-  const phone = normalizePhone(phoneInput);
+export async function createPairing(phoneInput: string | undefined, requesterOpenId: string, mode: PairingMode = "code"): Promise<PairingRecord> {
+  const phone = mode === "qr" ? (phoneInput ? normalizePhone(phoneInput) : "qr-device") : normalizePhone(phoneInput || "");
   const id = nanoid(12);
   const expiresAt = Date.now() + 60_000;
   const authDir = path.join(authRoot, id);
   await fs.mkdir(authDir, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
-  const record: PairingRecord = { id, phone, requesterOpenId, status: "pending", expiresAt, createdAt: Date.now() };
+  const record: PairingRecord = { id, phone, requesterOpenId, mode, status: "pending", expiresAt, createdAt: Date.now() };
   sessions.set(id, record);
   // Initial save is fire-and-forget for the worker loop, but never unhandled.
   void safeSavePairing({ id, phone, status: "pending", expiresAt, requesterOpenId });
@@ -88,13 +96,18 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
         if (update.connection === "connecting" || update.connection === "open") resolveReady();
         const current = sessions.get(id);
         if (!current) return;
+        if (update.qr && current.mode === "qr" && current.status === "pending") {
+          current.qr = await renderPairingQr(update.qr);
+        }
         if (update.connection === "open") {
           current.status = "linked";
+          current.qr = undefined;
           current.session = await serializeAuthState(authDir);
           await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
           sockets.delete(id);
         }
         if (update.connection === "close") {
+          current.qr = undefined;
           const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
           console.warn("[Pairing] WhatsApp socket closed", { requestId: id, reason, status: current.status });
           if (reason !== DisconnectReason.loggedOut && current.status === "pending") {
@@ -119,10 +132,12 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   if (!state.creds.registered) {
     try {
       await Promise.race([socketReady, new Promise<void>(resolve => setTimeout(resolve, 10_000))]);
-      // WhatsApp can close the pre-auth socket if pairing is requested during the initial handshake.
-      // The ten-second delay mirrors the current Baileys pairing guidance for 401/428 responses.
-      await new Promise(resolve => setTimeout(resolve, 10_000));
-      record.code = await retryPairingCode(() => socket.requestPairingCode(phone));
+      if (mode === "code") {
+        // WhatsApp can close the pre-auth socket if pairing is requested during the initial handshake.
+        // The ten-second delay mirrors the current Baileys pairing guidance for 401/428 responses.
+        await new Promise(resolve => setTimeout(resolve, 10_000));
+        record.code = await retryPairingCode(() => socket.requestPairingCode(phone));
+      }
     } catch (error) {
       record.status = "failed";
       record.error = "The WhatsApp connection closed before a linking code was issued. Wait a moment and try again.";
@@ -137,6 +152,7 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
       current.status = "expired";
       current.error = "Pairing code expired. Start a new request.";
       void safeSavePairing({ id, phone, status: "expired", expiresAt, requesterOpenId });
+      sessions.get(id)!.qr = undefined;
       sockets.get(id)?.end(undefined);
       sockets.delete(id);
     }
@@ -144,12 +160,20 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   return { ...record };
 }
 
+export function toPairingView(record: PairingRecord, requesterOpenId: string, isAdmin = false) {
+  if (!isAdmin && record.requesterOpenId !== requesterOpenId) throw new Error("You are not allowed to access this pairing request.");
+  if (record.status === "pending" && Date.now() >= record.expiresAt) {
+    record.status = "expired";
+    record.qr = undefined;
+    record.error = "Pairing code expired. Start a new request.";
+  }
+  return { ...record, session: undefined };
+}
+
 export function getPairing(id: string, requesterOpenId: string, isAdmin = false) {
   const record = sessions.get(id);
   if (!record) throw new Error("Pairing request not found.");
-  if (!isAdmin && record.requesterOpenId !== requesterOpenId) throw new Error("You are not allowed to access this pairing request.");
-  if (record.status === "pending" && Date.now() >= record.expiresAt) record.status = "expired";
-  return { ...record, session: undefined };
+  return toPairingView(record, requesterOpenId, isAdmin);
 }
 
 export function revealSession(id: string, requesterOpenId: string, isAdmin = false) {

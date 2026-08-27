@@ -28,3 +28,11 @@
 - [ ] Identify verified cause of WhatsApp rejecting generated linking codes without speculative retries
 - [x] Upgrade the pairing worker from Baileys 6.7.24 to upstream 7.0.0-rc14 and validate compatibility
 - [ ] Fix preview tRPC API Query Error: Failed to fetch at 2026-08-27 20:38:41 EAT
+- [ ] Redesign Firebox into a cyberpunk developer portfolio with Home, About, Work, Services, Skills, and Contact sections
+- [ ] Showcase Firebox, BConnect, CodeLab Academy, Cyber Academy, WhatsApp bot projects, and other apps with project links
+- [ ] Preserve screenshot-inspired HUD animation, neon palette, scanlines, glow effects, and responsive layout
+- [ ] Fix bot session stuck at “logging in” after WhatsApp accepts the pairing code
+- [ ] Resolve confirmed WhatsApp “Couldn’t link device” failure after code acceptance
+- [x] Add QR pairing fallback with server-side QR lifecycle, refresh, expiry, and protected session handling
+- [x] Add QR mode controls and QR display to the Firebox pairing interface
+- [x] Add tests for QR access boundaries, expiry, and credential redaction
