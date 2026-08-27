@@ -18,4 +18,7 @@
 - [x] Add persistent-hosting and secure session-storage setup guidance for the integrated worker
 - [x] Make Firebox the direct pairing page with no dependency on the original external portal
 - [x] Create a private GitHub repository and push the validated Firebox pairing code without secrets
-- [x] Fix reported pairing failure: connection closes before a linking code is displayed
+- [x] Apply code-level fix for pairing failure: socket readiness, current Baileys initialization, and retry handling
+- [ ] Verify live WhatsApp linking-code issuance on the deployed persistent worker
+- [x] Diagnose and resolve persistent Baileys socket closure before linking-code issuance
+- [x] Rework live Baileys pairing initialization after deployed retry fix still returns Connection Closed

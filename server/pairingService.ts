@@ -1,6 +1,5 @@
 import makeWASocket, {
   DisconnectReason,
-  fetchLatestBaileysVersion,
   useMultiFileAuthState,
 } from "@whiskeysockets/baileys";
 import { Boom } from "@hapi/boom";
@@ -62,13 +61,12 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   const authDir = path.join(authRoot, id);
   await fs.mkdir(authDir, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
-  const { version } = await fetchLatestBaileysVersion();
   const record: PairingRecord = { id, phone, requesterOpenId, status: "pending", expiresAt, createdAt: Date.now() };
   sessions.set(id, record);
   // Initial save is fire-and-forget for the worker loop
   db.savePairingRequest({ id, phone, status: "pending", expiresAt, requesterOpenId });
 
-  const socket = makeWASocket({ auth: state, version, printQRInTerminal: false, logger });
+  const socket = makeWASocket({ auth: state, logger });
   sockets.set(id, socket);
   socket.ev.on("creds.update", saveCreds);
   let resolveReady: () => void = () => undefined;
@@ -85,6 +83,7 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
     }
     if (update.connection === "close") {
       const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
+      console.warn("[Pairing] WhatsApp socket closed", { requestId: id, reason, status: current.status });
       if (reason !== DisconnectReason.loggedOut && current.status === "pending") {
         current.status = "failed";
         db.savePairingRequest({ id, phone, status: "failed", expiresAt, requesterOpenId });
