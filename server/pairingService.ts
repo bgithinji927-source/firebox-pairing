@@ -34,6 +34,17 @@ export function normalizePhone(input: string) {
   return phone;
 }
 
+export async function retryPairingCode(requestCode: () => Promise<string>, attempts = 2) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try { return await requestCode(); } catch (error) {
+      lastError = error;
+      if (attempt + 1 < attempts) await new Promise(resolve => setTimeout(resolve, 1_500));
+    }
+  }
+  throw lastError || new Error("Pairing code request failed.");
+}
+
 async function serializeAuthState(dir: string) {
   const files = await fs.readdir(dir);
   const payload: Record<string, string> = {};
@@ -60,7 +71,10 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   const socket = makeWASocket({ auth: state, version, printQRInTerminal: false, logger });
   sockets.set(id, socket);
   socket.ev.on("creds.update", saveCreds);
+  let resolveReady: () => void = () => undefined;
+  const socketReady = new Promise<void>(resolve => { resolveReady = resolve; });
   socket.ev.on("connection.update", async update => {
+    if (update.connection === "connecting" || update.connection === "open") resolveReady();
     const current = sessions.get(id);
     if (!current) return;
     if (update.connection === "open") {
@@ -80,7 +94,16 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   });
 
   if (!state.creds.registered) {
-    record.code = await socket.requestPairingCode(phone);
+    try {
+      await Promise.race([socketReady, new Promise<void>(resolve => setTimeout(resolve, 4_000))]);
+      record.code = await retryPairingCode(() => socket.requestPairingCode(phone));
+    } catch (error) {
+      record.status = "failed";
+      record.error = "The WhatsApp connection closed before a linking code was issued. Wait a moment and try again.";
+      await db.savePairingRequest({ id, phone, status: "failed", expiresAt, requesterOpenId });
+      sockets.delete(id);
+      throw new Error(record.error, { cause: error });
+    }
   }
   setTimeout(async () => {
     const current = sessions.get(id);
