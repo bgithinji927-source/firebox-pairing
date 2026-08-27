@@ -1,7 +1,7 @@
 # Project TODO
 
 - [x] Private owner-authenticated access control
-- [ ] Owner-controlled requester approval and revocation flow
+- [x] Owner-controlled requester approval and revocation flow
 - [x] Integrated server-side pairing worker with server-only credential handling
 - [x] Phone-number pairing request flow with validation and progress states
 - [x] Linked Devices instructions and pairing-code display

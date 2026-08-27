@@ -84,9 +84,17 @@ export async function getPairingAccess(openId: string) {
 export async function grantPairingAccess(openId: string, name: string | null) {
   const db = await getDb();
   if (!db) return;
-  await db.insert(pairingAccess).values({
-    requesterOpenId: openId,
-    requesterName: name,
-    status: "approved"
-  }).onDuplicateKeyUpdate({ set: { status: "approved" } });
+  await db.insert(pairingAccess).values({ requesterOpenId: openId, requesterName: name, status: "approved" }).onDuplicateKeyUpdate({ set: { status: "approved" } });
+}
+
+export async function setPairingAccess(openId: string, status: "pending" | "approved" | "revoked", name?: string | null) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(pairingAccess).values({ requesterOpenId: openId, requesterName: name ?? null, status }).onDuplicateKeyUpdate({ set: { status, requesterName: name ?? null } });
+}
+
+export async function listPairingAccess() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pairingAccess).orderBy(desc(pairingAccess.updatedAt)).limit(100);
 }

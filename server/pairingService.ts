@@ -14,6 +14,7 @@ export type PairingStatus = "pending" | "linked" | "expired" | "failed";
 export type PairingRecord = {
   id: string;
   phone: string;
+  requesterOpenId: string;
   status: PairingStatus;
   code?: string;
   expiresAt: number;
@@ -51,7 +52,7 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   await fs.mkdir(authDir, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
   const { version } = await fetchLatestBaileysVersion();
-  const record: PairingRecord = { id, phone, status: "pending", expiresAt, createdAt: Date.now() };
+  const record: PairingRecord = { id, phone, requesterOpenId, status: "pending", expiresAt, createdAt: Date.now() };
   sessions.set(id, record);
   // Initial save is fire-and-forget for the worker loop
   db.savePairingRequest({ id, phone, status: "pending", expiresAt, requesterOpenId });
@@ -94,16 +95,18 @@ export async function createPairing(phoneInput: string, requesterOpenId: string)
   return { ...record };
 }
 
-export function getPairing(id: string) {
+export function getPairing(id: string, requesterOpenId: string, isAdmin = false) {
   const record = sessions.get(id);
   if (!record) throw new Error("Pairing request not found.");
+  if (!isAdmin && record.requesterOpenId !== requesterOpenId) throw new Error("You are not allowed to access this pairing request.");
   if (record.status === "pending" && Date.now() >= record.expiresAt) record.status = "expired";
   return { ...record, session: undefined };
 }
 
-export function revealSession(id: string) {
+export function revealSession(id: string, requesterOpenId: string, isAdmin = false) {
   const record = sessions.get(id);
   if (!record) throw new Error("Pairing request not found.");
+  if (!isAdmin && record.requesterOpenId !== requesterOpenId) throw new Error("You are not allowed to access this pairing request.");
   if (record.status !== "linked" || !record.session) throw new Error("The device is not linked yet.");
   const secret = record.session;
   record.session = undefined;
@@ -115,6 +118,7 @@ export async function recentPairings() {
   return history.map(item => ({
     id: item.id,
     phone: item.phone,
+    requesterOpenId: item.requesterOpenId,
     status: item.status as PairingStatus,
     expiresAt: item.expiresAt,
     createdAt: item.createdAt.getTime(),
