@@ -11,7 +11,7 @@ import P from "pino";
 import QRCode from "qrcode";
 import { nanoid } from "nanoid";
 import * as db from "./db";
-import { isSessionVaultConfigured, storeSession } from "./sessionVault";
+import { getSessionVaultStatus, isSessionVaultConfigured, storeSession } from "./sessionVault";
 import { startEmbeddedBot } from "./botRuntimeManager";
 
 export type PairingStatus = "pending" | "linked" | "expired" | "failed";
@@ -140,8 +140,9 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             console.info("[Pairing] WhatsApp socket linked", { requestId: id });
             current.qr = undefined;
             current.session = await serializeAuthState(authDir);
-            const vaultConfigured = isSessionVaultConfigured();
-            console.info("[Pairing] session vault check", { requestId: id, configured: vaultConfigured });
+            const vaultStatus = getSessionVaultStatus();
+            const vaultConfigured = vaultStatus.configured;
+            console.info("[Pairing] session vault check", { requestId: id, ...vaultStatus });
             if (vaultConfigured) {
               console.info("[Pairing] storing linked session", { requestId: id });
               const stored = await storeSession(current.session);

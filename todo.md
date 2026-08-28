@@ -106,3 +106,7 @@
 - [x] Push the validated delayed 515 reconnect fix to bgithinji927-source/firebox-pairing main for Railway deployment
 
 - [ ] Verify first-time short-token handoff appears in the linked portal state and is backed by the encrypted MongoDB session
+
+- [ ] Resolve reveal-only fallback after pairing; portal still receives no short token from the vault flow
+
+- [ ] Diagnose MongoDB variable expansion or connectivity despite MONGODB_URI=${{MongoDB.MONGO_URL}} being configured

@@ -1,7 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { decryptSessionValue, encryptSessionValue } from "./sessionVault";
+import { decryptSessionValue, encryptSessionValue, getSessionVaultStatus } from "./sessionVault";
 
 describe("session vault encryption", () => {
+  it("reports vault configuration without exposing the URI or secret", () => {
+    const status = getSessionVaultStatus();
+    expect(status).toHaveProperty("configured");
+    expect(status).toHaveProperty("mongoUriPresent");
+    expect(status).toHaveProperty("mongoUriLooksUnexpanded");
+    expect(status).toHaveProperty("encryptionSecretPresent");
+    expect(JSON.stringify(status)).not.toMatch(/mongodb:\/\/|JWT_SECRET|MONGODB_URI/);
+  });
   const originalJwt = process.env.JWT_SECRET;
   const originalVault = process.env.FIREBOX_SESSION_VAULT_KEY;
   afterEach(() => {

@@ -76,6 +76,17 @@ export async function resolveSessionToken(token: string) {
   return session;
 }
 
+export function getSessionVaultStatus() {
+  const encryptionSecretPresent = Boolean(process.env.JWT_SECRET || process.env.FIREBOX_SESSION_VAULT_KEY);
+  const mongoUriPresent = Boolean(mongoUri);
+  return {
+    configured: mongoUriPresent && encryptionSecretPresent,
+    mongoUriPresent,
+    mongoUriLooksUnexpanded: mongoUri.includes("${{") || mongoUri.includes("}}"),
+    encryptionSecretPresent,
+  };
+}
+
 export function isSessionVaultConfigured() {
-  return Boolean(mongoUri && (process.env.JWT_SECRET || process.env.FIREBOX_SESSION_VAULT_KEY));
+  return getSessionVaultStatus().configured;
 }
