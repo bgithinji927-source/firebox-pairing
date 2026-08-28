@@ -5,7 +5,7 @@ async function resolveSessionFromToken({ portalUrl, token, runtimeSecret, fetchI
   const response = await fetchImpl(`${baseUrl}/api/trpc/pairing.resolveBotToken`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-firebox-runtime-secret": runtimeSecret || "" },
-    body: JSON.stringify({ 0: { json: { token: normalizedToken } } }),
+    body: JSON.stringify({ json: { token: normalizedToken } }),
   });
   if (!response.ok) throw new Error(`Firebox token exchange failed with HTTP ${response.status}.`);
   const body = await response.json();

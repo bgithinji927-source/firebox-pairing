@@ -112,3 +112,5 @@
 - [ ] Diagnose MongoDB variable expansion or connectivity despite MONGODB_URI=${{MongoDB.MONGO_URL}} being configured
 
 - [ ] Diagnose embedded bot runtime after short token ready; current Railway evidence does not show worker startup or command response
+
+- [ ] Fix embedded bot bootstrap exiting with code 1 immediately after short-token generation
