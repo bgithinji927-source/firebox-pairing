@@ -37,6 +37,17 @@ const logger = P({ level: "silent" });
 const authRoot = process.env.FIREBOX_AUTH_DIR || path.join(process.cwd(), ".firebox-auth");
 export const PAIRING_LIFETIME_MS = 5 * 60_000;
 
+export function shouldReconnectAfterRestartRequired(reason: number | undefined, status: PairingRecord["status"], now: number, expiresAt: number) {
+  return reason === DisconnectReason.restartRequired && status === "pending" && now < expiresAt;
+}
+
+export function markReconnectFailure(record: PairingRecord) {
+  if (record.status !== "pending") return false;
+  record.status = "failed";
+  record.error = "The WhatsApp worker could not reconnect after pairing. Start a new request.";
+  return true;
+}
+
 export function normalizePhone(input: string) {
   const phone = input.replace(/[^0-9]/g, "");
   if (phone.length < 10 || phone.length > 15) throw new Error("Use a valid phone number with country code.");
@@ -118,6 +129,7 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
     activeSocket.ev.on("connection.update", update => {
       void (async () => {
         try {
+          if (update.connection) console.info("[Pairing] WhatsApp socket update", { requestId: id, connection: update.connection, status: sessions.get(id)?.status });
           if (update.connection === "connecting" || update.connection === "open") resolveReady();
           const current = sessions.get(id);
           if (!current) return;
@@ -125,6 +137,7 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             current.qr = await renderPairingQr(update.qr);
           }
           if (update.connection === "open") {
+            console.info("[Pairing] WhatsApp socket linked", { requestId: id });
             current.status = "linked";
             current.qr = undefined;
             current.session = await serializeAuthState(authDir);
@@ -144,13 +157,28 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             current.qr = undefined;
             const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
             console.warn("[Pairing] WhatsApp socket closed", { requestId: id, reason, status: current.status });
-            if (reason === DisconnectReason.restartRequired && current.status === "pending" && Date.now() < current.expiresAt) {
+            if (shouldReconnectAfterRestartRequired(reason, current.status, Date.now(), current.expiresAt)) {
               current.error = "WhatsApp accepted the pairing. Reconnecting the Firebox worker…";
+              console.info("[Pairing] scheduling WhatsApp reconnect", { requestId: id, delayMs: 250 });
               setTimeout(() => {
-                const nextSocket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
-                socket = nextSocket;
-                sockets.set(id, nextSocket);
-                bindSocket(nextSocket);
+                void (async () => {
+                  const latest = sessions.get(id);
+                  if (!latest || latest.status !== "pending" || Date.now() >= latest.expiresAt) return;
+                  try {
+                    const nextSocket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
+                    socket = nextSocket;
+                    sockets.set(id, nextSocket);
+                    bindSocket(nextSocket);
+                    console.info("[Pairing] WhatsApp reconnect socket created", { requestId: id });
+                  } catch (error) {
+                    console.error("[Pairing] WhatsApp reconnect failed", { requestId: id, error: error instanceof Error ? error.message : String(error) });
+                    const currentAfterReconnectFailure = sessions.get(id);
+                    if (currentAfterReconnectFailure && markReconnectFailure(currentAfterReconnectFailure)) {
+                      await safeSavePairing({ id, phone, status: "failed", expiresAt, requesterOpenId });
+                    }
+                    sockets.delete(id);
+                  }
+                })();
               }, 250);
               return;
             }

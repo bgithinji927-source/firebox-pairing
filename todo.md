@@ -23,6 +23,11 @@
 - [x] Diagnose and resolve persistent Baileys socket closure before linking-code issuance
 - [x] Rework live Baileys pairing initialization after deployed retry fix still returns Connection Closed
 - [ ] Resolve or isolate the still-failing live WhatsApp pairing flow with fresh production evidence
+- [x] Diagnose the latest deployed 515 reconnect failure without changing unrelated features
+- [x] Guard delayed 515 reconnect creation and log safe reconnect milestones
+- [x] Add safe diagnostics for replacement-socket connecting/open/linked/close events after 515
+- [x] Add focused tests for successful replacement-socket binding and reconnect failure transition
+- [ ] Verify fresh Railway logs advance beyond pending after 515
 - [ ] Diagnose and fix connection-close failure in the Firebox preview environment
 - [ ] Fix linking-code rejection by clarifying phone-number linking path and validating code expiry/format
 - [ ] Identify verified cause of WhatsApp rejecting generated linking codes without speculative retries
@@ -30,6 +35,9 @@
 - [ ] Fix preview tRPC API Query Error: Failed to fetch at 2026-08-27 20:38:41 EAT
 - [x] Isolate harmless public-mode Missing session cookie logs from pairing routes
 - [ ] Verify Railway is deploying the public-mode revision instead of an older authenticated build
+- [ ] Verify Railway deployment age is newer than the latest Firebox GitHub push
+- [ ] Diagnose why Railway is not detecting the latest Firebox GitHub commit
+- [ ] Confirm Railway is connected to bgithinji927-source/firebox-pairing on main
 - [x] Update public UI copy to describe the shared embedded runtime instead of visitor bot deployment
 - [x] Extend pairing lifetime to five minutes and align UI copy and coverage
 - [x] Fix Railway startup failure caused by missing OAUTH_SERVER_URL
@@ -46,7 +54,7 @@
 - [x] Add QR pairing fallback with server-side QR lifecycle, refresh, expiry, and protected session handling
 - [x] Add QR mode controls and QR display to the Firebox pairing interface
 - [x] Add tests for QR access boundaries, expiry, and credential redaction
-- [x] Fix the premature 60.5-second cleanup timer in the 515 reconnect lifecycle; live Railway verification remains pending
+- [ ] Fix the Railway 515 reconnect stopping while the request remains pending; token generation cannot begin until linked
 - [ ] Fix connected WhatsApp bot not responding to incoming commands
 - [ ] Fix Bad MAC decryption failures followed by 401 linked-session closure
 - [ ] Add a safe fresh-session reset path for incompatible Signal auth state
