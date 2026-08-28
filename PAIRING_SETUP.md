@@ -4,6 +4,16 @@ The site is now the direct pairing page. It no longer links to the original thir
 
 ## Production requirement
 
+The intended deployment is one Railway service containing the public Firebox portal and the embedded Jexploit runtime. Visitors do not deploy a bot service. Add Railway MongoDB to the same project, then configure the Firebox service with:
+
+```text
+MONGODB_URI=${{Firebox MongoDB.MONGO_URL}}
+FIREBOX_PORTAL_URL=https://your-firebox-domain.up.railway.app
+```
+
+After a visitor links WhatsApp, Firebox saves the full session in encrypted MongoDB, issues a short `FIREBOX-XXXXXX` token, and starts the embedded command runtime for that visitor. The runtime exchanges the token for the full session and then handles the existing commands. The portal and bot runtime share the same Railway deployment; visitors deploy nothing.
+
+
 The Baileys worker maintains a live WhatsApp connection and stores temporary authentication files under `FIREBOX_AUTH_DIR` (default `.firebox-auth`). Run this project on a persistent, always-on host with a durable volume for that directory. The default stateless hosting mode is not sufficient for a live WhatsApp connection. Managed reserved hosting is the simplest option; it is usage-based and can reach approximately $37.50 per month at full 24/7 utilization for the default 1 vCPU / 0.5 GB allocation, before egress and after the included monthly credit is applied.
 
 ## Access model
@@ -18,7 +28,7 @@ Phone-number code mode remains available, but current Baileys releases have open
 
 ## Secret handling
 
-The server generates a `FIREBOX-BOT~` session bundle only after the WhatsApp connection reaches the linked state. Firebox then attempts to send the complete session as a self-message to the linked WhatsApp account. Status responses redact the session. If WhatsApp message delivery is unavailable, the UI still provides a one-time reveal fallback. Operators should immediately move the value into an encrypted environment variable or password manager and never commit it to source control.
+The server generates a `FIREBOX-BOT~` session bundle only after the WhatsApp connection reaches the linked state, stores it encrypted in MongoDB, and exposes only a short `FIREBOX-XXXXXX` token. Firebox attempts to send the short token as a self-message to the linked WhatsApp account; the portal also displays the token in the linked panel. Status responses never return the full session. The embedded runtime uses the token exchange to load the full session in memory and never logs it.
 
 ## Important compatibility note
 

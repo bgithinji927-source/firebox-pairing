@@ -44,28 +44,32 @@
 - [x] Add tests for QR access boundaries, expiry, and credential redaction
 - [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
 - [ ] Fix connected WhatsApp bot not responding to incoming commands
-- [ ] Provide a secure post-pairing session handoff for use in the separate bot runtime or configuration UI
-- [ ] Replace oversized WhatsApp session delivery with a short one-time token backed by the full encrypted session
-- [ ] Implement the confirmed FIREBOX short-token exchange workflow
-- [ ] Save the full linked session to MongoDB before issuing the short token
-- [ ] Show the generated short token in the pairing portal after link completion
-- [ ] Let the bot retrieve the full session by the pasted token
-- [ ] Preserve bot compatibility by defining the token-to-session retrieval contract
+- [ ] Provide a secure post-pairing session handoff through a server-only embedded bot runtime path
+- [x] Replace oversized WhatsApp session delivery with a short one-time token backed by the full encrypted session
+- [x] Implement the confirmed FIREBOX short-token exchange workflow
+- [x] Save the full linked session to MongoDB before issuing the short token
+- [x] Show the generated short token in the pairing portal after link completion
+- [x] Let the embedded bot runtime retrieve the full session by token
+- [x] Preserve bot compatibility by defining the token-to-session retrieval contract
 - [ ] Implement automatic session delivery to the paired WhatsApp account; current live test shows self-message delivery failed
 - [x] Diagnose missing session delivery after a successful WhatsApp link; live self-message failure confirmed
 - [ ] Add a protected session paste-and-save UI in the pairing request panel
 - [x] Add unit coverage for session delivery success and missing identity failure
 - [x] Add unit coverage proving session-delivery logs never contain the credential
-- [ ] Store the submitted bot session securely and expose it only to the bot runtime
-- [ ] Use MongoDB for bot-session storage when a valid MongoDB connection is configured
-- [ ] Keep the existing MySQL pairing metadata separate from MongoDB bot-session secrets
+- [ ] Store the full bot session encrypted and expose it only to the runtime
+- [x] Use MongoDB for bot-session storage when a valid MongoDB connection is configured
+- [x] Keep the existing MySQL pairing metadata separate from MongoDB bot-session secrets
 - [ ] Connect the stored session to a persistent bot runtime that responds to commands
-- [ ] Run one shared bot runtime for all public visitors instead of requiring visitor deployments
+- [ ] Run one shared embedded bot runtime for public visitors instead of requiring visitor deployments
 - [ ] Adapt the existing Jexploit/Firebox command runtime to the shared public portal
 - [ ] Integrate the command bot runtime into the single public Firebox deployment
-- [ ] Merge the Jexploit runtime into the Firebox pairing repository for one-service deployment
-- [ ] Keep required deployment configuration minimal and document only the essential Railway variables
+- [x] Merge the Jexploit runtime into the Firebox pairing repository for one-service deployment
+- [x] Keep required deployment configuration minimal and document only the essential Railway variables
 - [ ] Preserve all existing Jexploit commands and capabilities during integration
 - [ ] Preserve the original command behavior while loading each visitor session by token
 - [ ] Isolate each visitor’s WhatsApp session and command handling in the shared runtime
-- [ ] Validate the post-link session delivery boundary and separate bot-runtime handoff end to end
+- [ ] Validate the post-link session delivery boundary and embedded bot-runtime handoff end to end
+- [x] Protect the bot token exchange with the server-only inherited JWT secret
+- [ ] Add integration tests for botRuntimeManager and start-token.cjs
+- [ ] Verify and document JWT_SECRET or FIREBOX_SESSION_VAULT_KEY as a required vault secret
+- [ ] Add multi-session isolation checks for auth state and command handling

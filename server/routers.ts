@@ -6,9 +6,18 @@ import { z } from "zod";
 import { createPairing, getPairing, recentPairings, revealSession } from "./pairingService";
 import { getPairingAccess, listPairingAccess, setPairingAccess } from "./db";
 import { TRPCError } from "@trpc/server";
+import crypto from "node:crypto";
 import { resolveSessionToken } from "./sessionVault";
 
 const PUBLIC_REQUESTER_OPEN_ID = process.env.OWNER_OPEN_ID || "public-owner";
+
+export function hasBotRuntimeAccess(headers: Record<string, string | string[] | undefined>) {
+  const expected = process.env.JWT_SECRET || "";
+  const presented = headers["x-firebox-runtime-secret"];
+  const value = Array.isArray(presented) ? presented[0] : presented;
+  if (!expected || !value || expected.length !== value.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(value));
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -34,7 +43,10 @@ export const appRouter = router({
     status: publicProcedure.input(z.object({ id: z.string().min(1) })).query(({ input }) => getPairing(input.id, PUBLIC_REQUESTER_OPEN_ID, true)),
     revealSecret: publicProcedure.input(z.object({ id: z.string().min(1) })).mutation(({ input }) => ({ secret: revealSession(input.id, PUBLIC_REQUESTER_OPEN_ID, true) })),
     recent: publicProcedure.query(() => recentPairings()),
-    resolveBotToken: publicProcedure.input(z.object({ token: z.string().regex(/^FIREBOX-[A-Z0-9]{6}$/i) })).mutation(async ({ input }) => ({ session: await resolveSessionToken(input.token) })),
+    resolveBotToken: publicProcedure.input(z.object({ token: z.string().regex(/^FIREBOX-[A-Z0-9]{6}$/i) })).mutation(async ({ ctx, input }) => {
+      if (!hasBotRuntimeAccess(ctx.req.headers as Record<string, string | string[] | undefined>)) throw new TRPCError({ code: "UNAUTHORIZED" });
+      return { session: await resolveSessionToken(input.token) };
+    }),
   }),
 });
 

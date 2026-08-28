@@ -8,7 +8,7 @@ async function resolveSession() {
   }
   const response = await fetch(`${portalUrl}/api/trpc/pairing.resolveBotToken`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-firebox-runtime-secret": process.env.JWT_SECRET || "" },
     body: JSON.stringify({ 0: { json: { token } } }),
   });
   if (!response.ok) throw new Error(`Firebox token exchange failed with HTTP ${response.status}.`);
