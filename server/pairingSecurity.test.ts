@@ -10,17 +10,14 @@ const baseContext = (user: TrpcContext["user"]): TrpcContext => ({
 });
 
 describe("pairing access boundaries", () => {
-  it("rejects unauthenticated pairing history access", async () => {
+  it("allows pairing history access in temporary public mode", async () => {
     const caller = appRouter.createCaller(baseContext(null));
-    await expect(caller.pairing.recent()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.pairing.recent()).resolves.toSatisfy((items: Array<{ session?: string }>) => items.every(item => item.session === undefined));
   });
 
-  it("rejects authenticated non-admin pairing requests", async () => {
-    const caller = appRouter.createCaller(baseContext({
-      id: 2, openId: "operator", name: "Operator", email: null, loginMethod: "test", role: "user",
-      createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date(),
-    }));
-    await expect(caller.pairing.request({ phone: "256742932677" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  it("allows the public pairing procedure without an OAuth user", async () => {
+    const caller = appRouter.createCaller(baseContext(null));
+    await expect(caller.pairing.status({ id: "unknown" })).rejects.toThrow(/not found/i);
   });
 
   it("never exposes an unknown session and clears a revealed value by contract", () => {

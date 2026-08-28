@@ -28,6 +28,12 @@
 - [ ] Identify verified cause of WhatsApp rejecting generated linking codes without speculative retries
 - [x] Upgrade the pairing worker from Baileys 6.7.24 to upstream 7.0.0-rc14 and validate compatibility
 - [ ] Fix preview tRPC API Query Error: Failed to fetch at 2026-08-27 20:38:41 EAT
+- [x] Fix Railway startup failure caused by missing OAUTH_SERVER_URL
+- [x] Remove OAuth dependency from the Firebox portal
+- [x] Preserve session redaction while running the portal in temporary public mode
+- [x] Update UI copy and panels to accurately describe temporary public mode
+- [x] Update pairing setup documentation for OAuth-disabled Railway deployment
+- [x] Remove misleading dead OAuth/access-control portal flows from public mode
 - [ ] Redesign Firebox into a cyberpunk developer portfolio with Home, About, Work, Services, Skills, and Contact sections
 - [ ] Showcase Firebox, BConnect, CodeLab Academy, Cyber Academy, WhatsApp bot projects, and other apps with project links
 - [ ] Preserve screenshot-inspired HUD animation, neon palette, scanlines, glow effects, and responsive layout
@@ -37,3 +43,12 @@
 - [x] Add QR mode controls and QR display to the Firebox pairing interface
 - [x] Add tests for QR access boundaries, expiry, and credential redaction
 - [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
+- [ ] Fix connected WhatsApp bot not responding to incoming commands
+- [ ] Provide a secure post-pairing session handoff for use in the separate bot runtime or configuration UI
+- [ ] Send the generated session to the paired WhatsApp account after successful linking
+- [ ] Add a protected session paste-and-save UI in the pairing request panel
+- [ ] Store the submitted bot session securely and expose it only to the bot runtime
+- [ ] Use MongoDB for bot-session storage when a valid MongoDB connection is configured
+- [ ] Keep the existing MySQL pairing metadata separate from MongoDB bot-session secrets
+- [ ] Connect the stored session to a persistent bot runtime that responds to commands
+- [ ] Document and validate the boundary between pairing success and bot command execution

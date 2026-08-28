@@ -1,6 +1,6 @@
 # Firebox direct pairing setup
 
-The site is now the direct pairing page. It no longer links to the original third-party pairing site. Authenticated owner accounts use the server-side `pairing` procedures to request either a phone-number linking code or a QR pairing session, poll progress, and reveal a session credential once the WhatsApp connection is confirmed.
+The site is now the direct pairing page. It no longer links to the original third-party pairing site. The current Railway deployment runs in temporary public mode when `OAUTH_SERVER_URL` is absent, so pairing can be used without Manus OAuth. This mode is intended for setup only: anyone who discovers the URL can request a pairing and attempt to reveal a linked session. Restore OAuth or add a non-OAuth access token before production use.
 
 ## Production requirement
 
@@ -8,7 +8,7 @@ The Baileys worker maintains a live WhatsApp connection and stores temporary aut
 
 ## Access model
 
-Pairing procedures require authentication. The owner signs in through the built-in authentication flow and can approve or revoke additional operators through the Access Control panel. Non-admin users can request approval and can only read their own pairing request status. The owner account is promoted using the project owner identity configured in the environment.
+Temporary public mode does not require authentication and does not use `OAUTH_SERVER_URL`. Pairing metadata remains server-side and status responses redact session values, but the public URL itself is not an access control boundary. For production, configure OAuth or a dedicated `FIREBOX_ACCESS_TOKEN` gate before exposing the portal.
 
 ## QR pairing mode
 
