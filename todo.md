@@ -45,10 +45,13 @@
 - [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
 - [ ] Fix connected WhatsApp bot not responding to incoming commands
 - [ ] Provide a secure post-pairing session handoff for use in the separate bot runtime or configuration UI
-- [ ] Send the generated session to the paired WhatsApp account after successful linking
+- [x] Implement automatic session delivery to the paired WhatsApp account; live delivery verification remains pending
+- [x] Diagnose missing session delivery after a successful WhatsApp link
 - [ ] Add a protected session paste-and-save UI in the pairing request panel
+- [x] Add unit coverage for session delivery success and missing identity failure
+- [x] Add unit coverage proving session-delivery logs never contain the credential
 - [ ] Store the submitted bot session securely and expose it only to the bot runtime
 - [ ] Use MongoDB for bot-session storage when a valid MongoDB connection is configured
 - [ ] Keep the existing MySQL pairing metadata separate from MongoDB bot-session secrets
 - [ ] Connect the stored session to a persistent bot runtime that responds to commands
-- [ ] Document and validate the boundary between pairing success and bot command execution
+- [ ] Validate the post-link session delivery boundary and separate bot-runtime handoff end to end

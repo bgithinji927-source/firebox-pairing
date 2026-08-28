@@ -18,7 +18,7 @@ Phone-number code mode remains available, but current Baileys releases have open
 
 ## Secret handling
 
-The server generates a `FIREBOX-BOT~` session bundle only after the WhatsApp connection reaches the linked state. Status responses redact the session. The reveal endpoint returns the secret once and clears it from the in-memory record. Operators should immediately move the value into an encrypted environment variable or password manager and never commit it to source control.
+The server generates a `FIREBOX-BOT~` session bundle only after the WhatsApp connection reaches the linked state. Firebox then attempts to send the complete session as a self-message to the linked WhatsApp account. Status responses redact the session. If WhatsApp message delivery is unavailable, the UI still provides a one-time reveal fallback. Operators should immediately move the value into an encrypted environment variable or password manager and never commit it to source control.
 
 ## Important compatibility note
 

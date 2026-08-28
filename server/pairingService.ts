@@ -63,6 +63,24 @@ async function serializeAuthState(dir: string) {
   return `FIREBOX-BOT~${Buffer.from(JSON.stringify(payload)).toString("base64url")}`;
 }
 
+export async function deliverSessionToLinkedAccount(activeSocket: ReturnType<typeof makeWASocket>, session: string) {
+  const destination = activeSocket.user?.id;
+  if (!destination) throw new Error("Linked WhatsApp identity was not available for session delivery.");
+  await activeSocket.sendMessage(destination, {
+    text: `FIREBOX SESSION\\n\\n${session}\\n\\nCopy this value into the Firebox bot service as SESSION_ID. Treat it as a live credential and never forward it.`
+  });
+}
+
+export async function attemptSessionDelivery(activeSocket: ReturnType<typeof makeWASocket>, session: string, requestId: string) {
+  try {
+    await deliverSessionToLinkedAccount(activeSocket, session);
+    return true;
+  } catch (error) {
+    console.warn("[Pairing] session delivery failed", { requestId, error: error instanceof Error ? error.message : String(error) });
+    return false;
+  }
+}
+
 async function safeSavePairing(input: Parameters<typeof db.savePairingRequest>[0]) {
   try {
     await db.savePairingRequest(input);
@@ -105,6 +123,10 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             current.qr = undefined;
             current.session = await serializeAuthState(authDir);
             await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
+            const delivered = await attemptSessionDelivery(activeSocket, current.session, id);
+            current.error = delivered
+              ? "Session sent to the linked WhatsApp account. You can also reveal it once below."
+              : "Device linked, but WhatsApp session delivery failed. Use the one-time reveal below.";
             sockets.delete(id);
           }
           if (update.connection === "close") {
