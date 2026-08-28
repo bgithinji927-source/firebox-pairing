@@ -11,6 +11,7 @@ import P from "pino";
 import QRCode from "qrcode";
 import { nanoid } from "nanoid";
 import * as db from "./db";
+import { isSessionVaultConfigured, storeSession } from "./sessionVault";
 
 export type PairingStatus = "pending" | "linked" | "expired" | "failed";
 export type PairingMode = "code" | "qr";
@@ -24,6 +25,7 @@ export type PairingRecord = {
   qr?: string;
   expiresAt: number;
   session?: string;
+  token?: string;
   error?: string;
   createdAt: number;
 };
@@ -69,7 +71,7 @@ export async function deliverSessionToLinkedAccount(activeSocket: ReturnType<typ
   if (!destination) throw new Error("Linked WhatsApp identity was not available for session delivery.");
   await new Promise(resolve => setTimeout(resolve, 2_000));
   await activeSocket.sendMessage(jidNormalizedUser(destination), {
-    text: `FIREBOX SESSION\\n\\n${session}\\n\\nCopy this value into the Firebox bot service as SESSION_ID. Treat it as a live credential and never forward it.`
+    text: `FIREBOX BOT TOKEN\\n\\n${session}\\n\\nPaste this value into the Firebox bot service as SESSION_TOKEN. The bot will retrieve the full encrypted session from MongoDB. Treat this token as private and never forward it.`
   });
 }
 
@@ -124,11 +126,15 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             current.status = "linked";
             current.qr = undefined;
             current.session = await serializeAuthState(authDir);
+            if (isSessionVaultConfigured()) {
+              const stored = await storeSession(current.session);
+              current.token = stored.token;
+            }
             await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
-            const delivered = await attemptSessionDelivery(activeSocket, current.session, id);
-            current.error = delivered
-              ? "Session sent to the linked WhatsApp account. You can also reveal it once below."
-              : "Device linked, but WhatsApp session delivery failed. Use the one-time reveal below.";
+            const delivered = current.token ? await attemptSessionDelivery(activeSocket, current.token, id) : false;
+            current.error = current.token
+              ? (delivered ? "Short token sent to the linked WhatsApp account. Paste it into the bot portal." : "Device linked, but token delivery failed. Copy the token from the portal.")
+              : "Device linked, but MongoDB vault is not configured. Use the one-time full-session reveal below.";
             sockets.delete(id);
           }
           if (update.connection === "close") {
@@ -205,7 +211,7 @@ export function toPairingView(record: PairingRecord, requesterOpenId: string, is
     record.qr = undefined;
     record.error = "Pairing code expired. Start a new request.";
   }
-  return { ...record, session: undefined };
+  return { ...record, session: undefined, token: record.status === "linked" ? record.token : undefined };
 }
 
 export function getPairing(id: string, requesterOpenId: string, isAdmin = false) {
@@ -219,7 +225,7 @@ export function revealSession(id: string, requesterOpenId: string, isAdmin = fal
   if (!record) throw new Error("Pairing request not found.");
   if (!isAdmin && record.requesterOpenId !== requesterOpenId) throw new Error("You are not allowed to access this pairing request.");
   if (record.status !== "linked" || !record.session) throw new Error("The device is not linked yet.");
-  const secret = record.session;
+  const secret = record.token ?? record.session;
   record.session = undefined;
   return secret;
 }

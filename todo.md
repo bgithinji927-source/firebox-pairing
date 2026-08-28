@@ -45,6 +45,12 @@
 - [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
 - [ ] Fix connected WhatsApp bot not responding to incoming commands
 - [ ] Provide a secure post-pairing session handoff for use in the separate bot runtime or configuration UI
+- [ ] Replace oversized WhatsApp session delivery with a short one-time token backed by the full encrypted session
+- [ ] Implement the confirmed FIREBOX short-token exchange workflow
+- [ ] Save the full linked session to MongoDB before issuing the short token
+- [ ] Show the generated short token in the pairing portal after link completion
+- [ ] Let the bot retrieve the full session by the pasted token
+- [ ] Preserve bot compatibility by defining the token-to-session retrieval contract
 - [ ] Implement automatic session delivery to the paired WhatsApp account; current live test shows self-message delivery failed
 - [x] Diagnose missing session delivery after a successful WhatsApp link; live self-message failure confirmed
 - [ ] Add a protected session paste-and-save UI in the pairing request panel
