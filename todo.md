@@ -30,6 +30,7 @@
 - [ ] Fix preview tRPC API Query Error: Failed to fetch at 2026-08-27 20:38:41 EAT
 - [x] Isolate harmless public-mode Missing session cookie logs from pairing routes
 - [ ] Verify Railway is deploying the public-mode revision instead of an older authenticated build
+- [x] Update public UI copy to describe the shared embedded runtime instead of visitor bot deployment
 - [x] Extend pairing lifetime to five minutes and align UI copy and coverage
 - [x] Fix Railway startup failure caused by missing OAUTH_SERVER_URL
 - [x] Remove OAuth dependency from the Firebox portal
