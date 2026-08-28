@@ -94,3 +94,9 @@
 - [x] Verify sessionVault reads JWT_SECRET and FIREBOX_SESSION_VAULT_KEY from environment fallback paths
 - [ ] Add vault-path coverage for stored-session resolution under documented secret configurations
 - [ ] Add multi-session isolation checks for auth state and command handling
+
+- [ ] Investigate and fix the live Railway post-515 pairing failure; diagnostics alone did not restore linked/token completion
+
+- [ ] Investigate and fix the live Railway post-515 pairing failure; diagnostics alone did not restore linked/token completion
+
+- [ ] Verify Railway is serving the latest Firebox commit; current logs predate the reconnect diagnostics
