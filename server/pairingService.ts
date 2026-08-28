@@ -12,6 +12,7 @@ import QRCode from "qrcode";
 import { nanoid } from "nanoid";
 import * as db from "./db";
 import { isSessionVaultConfigured, storeSession } from "./sessionVault";
+import { startEmbeddedBot } from "./botRuntimeManager";
 
 export type PairingStatus = "pending" | "linked" | "expired" | "failed";
 export type PairingMode = "code" | "qr";
@@ -129,6 +130,7 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             if (isSessionVaultConfigured()) {
               const stored = await storeSession(current.session);
               current.token = stored.token;
+              startEmbeddedBot(id, current.token);
             }
             await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
             const delivered = current.token ? await attemptSessionDelivery(activeSocket, current.token, id) : false;

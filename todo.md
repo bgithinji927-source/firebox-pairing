@@ -60,4 +60,12 @@
 - [ ] Use MongoDB for bot-session storage when a valid MongoDB connection is configured
 - [ ] Keep the existing MySQL pairing metadata separate from MongoDB bot-session secrets
 - [ ] Connect the stored session to a persistent bot runtime that responds to commands
+- [ ] Run one shared bot runtime for all public visitors instead of requiring visitor deployments
+- [ ] Adapt the existing Jexploit/Firebox command runtime to the shared public portal
+- [ ] Integrate the command bot runtime into the single public Firebox deployment
+- [ ] Merge the Jexploit runtime into the Firebox pairing repository for one-service deployment
+- [ ] Keep required deployment configuration minimal and document only the essential Railway variables
+- [ ] Preserve all existing Jexploit commands and capabilities during integration
+- [ ] Preserve the original command behavior while loading each visitor session by token
+- [ ] Isolate each visitor’s WhatsApp session and command handling in the shared runtime
 - [ ] Validate the post-link session delivery boundary and separate bot-runtime handoff end to end
