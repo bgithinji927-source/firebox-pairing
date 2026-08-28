@@ -70,6 +70,12 @@
 - [ ] Isolate each visitor’s WhatsApp session and command handling in the shared runtime
 - [ ] Validate the post-link session delivery boundary and embedded bot-runtime handoff end to end
 - [x] Protect the bot token exchange with the server-only inherited JWT secret
-- [ ] Add integration tests for botRuntimeManager and start-token.cjs
-- [ ] Verify and document JWT_SECRET or FIREBOX_SESSION_VAULT_KEY as a required vault secret
+- [ ] Add executable integration tests for botRuntimeManager and start-token.cjs success/failure paths
+- [ ] Execute start-token.cjs success and failure paths with a mocked endpoint
+- [ ] Add stronger child-process lifecycle assertions for the embedded runtime manager
+- [ ] Add protected pairing.resolveBotToken flow coverage with the required secret header
+- [ ] Verify and document the JWT_SECRET/FIREBOX_SESSION_VAULT_KEY vault secret contract
+- [x] Add tests proving sessionVault encrypts and decrypts with JWT_SECRET and explicit vault-key configurations
+- [x] Verify sessionVault reads JWT_SECRET and FIREBOX_SESSION_VAULT_KEY from environment fallback paths
+- [ ] Add vault-path coverage for stored-session resolution under documented secret configurations
 - [ ] Add multi-session isolation checks for auth state and command handling

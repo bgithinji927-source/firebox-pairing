@@ -9,9 +9,10 @@ The intended deployment is one Railway service containing the public Firebox por
 ```text
 MONGODB_URI=${{Firebox MongoDB.MONGO_URL}}
 FIREBOX_PORTAL_URL=https://your-firebox-domain.up.railway.app
+JWT_SECRET=<keep the existing server secret; never expose it publicly>
 ```
 
-After a visitor links WhatsApp, Firebox saves the full session in encrypted MongoDB, issues a short `FIREBOX-XXXXXX` token, and starts the embedded command runtime for that visitor. The runtime exchanges the token for the full session and then handles the existing commands. The portal and bot runtime share the same Railway deployment; visitors deploy nothing.
+After a visitor links WhatsApp, Firebox saves the full session in encrypted MongoDB, issues a short `FIREBOX-XXXXXX` token, and starts the embedded command runtime for that visitor. The runtime exchanges the token for the full session and then handles the existing commands. The portal and bot runtime share the same Railway deployment; visitors deploy nothing. `JWT_SECRET` is required because it encrypts the MongoDB vault and authenticates the internal token exchange; it must never be exposed to the browser.
 
 
 The Baileys worker maintains a live WhatsApp connection and stores temporary authentication files under `FIREBOX_AUTH_DIR` (default `.firebox-auth`). Run this project on a persistent, always-on host with a durable volume for that directory. The default stateless hosting mode is not sufficient for a live WhatsApp connection. Managed reserved hosting is the simplest option; it is usage-based and can reach approximately $37.50 per month at full 24/7 utilization for the default 1 vCPU / 0.5 GB allocation, before egress and after the included monthly credit is applied.

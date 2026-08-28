@@ -34,18 +34,32 @@ function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-export async function storeSession(session: string) {
-  const token = `FIREBOX-${nanoid(6).toUpperCase()}`;
-  const key = encryptionKey();
+export function encryptSessionValue(session: string, secret = process.env.JWT_SECRET || process.env.FIREBOX_SESSION_VAULT_KEY || "") {
+  if (!secret) throw new Error("A vault encryption secret is not configured.");
+  const key = crypto.createHash("sha256").update(secret).digest();
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
   const ciphertext = Buffer.concat([cipher.update(session, "utf8"), cipher.final()]);
+  return { ciphertext: ciphertext.toString("base64url"), iv: iv.toString("base64url"), authTag: cipher.getAuthTag().toString("base64url") };
+}
+
+export function decryptSessionValue(value: { ciphertext: string; iv: string; authTag: string }, secret = process.env.JWT_SECRET || process.env.FIREBOX_SESSION_VAULT_KEY || "") {
+  if (!secret) throw new Error("A vault encryption secret is not configured.");
+  const key = crypto.createHash("sha256").update(secret).digest();
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, Buffer.from(value.iv, "base64url"));
+  decipher.setAuthTag(Buffer.from(value.authTag, "base64url"));
+  return Buffer.concat([decipher.update(Buffer.from(value.ciphertext, "base64url")), decipher.final()]).toString("utf8");
+}
+
+export async function storeSession(session: string) {
+  const token = `FIREBOX-${nanoid(6).toUpperCase()}`;
+  const encrypted = encryptSessionValue(session);
   const expiresAt = new Date(Date.now() + tokenLifetimeMs);
   await (await collection()).insertOne({
     tokenHash: hashToken(token),
-    ciphertext: ciphertext.toString("base64url"),
-    iv: iv.toString("base64url"),
-    authTag: cipher.getAuthTag().toString("base64url"),
+    ciphertext: encrypted.ciphertext,
+    iv: encrypted.iv,
+    authTag: encrypted.authTag,
     createdAt: new Date(),
     expiresAt,
   });
@@ -57,9 +71,7 @@ export async function resolveSessionToken(token: string) {
   if (!/^FIREBOX-[A-Z0-9]{6}$/.test(normalized)) throw new Error("Invalid Firebox session token.");
   const document = await (await collection()).findOne({ tokenHash: hashToken(normalized), expiresAt: { $gt: new Date() } });
   if (!document) throw new Error("Firebox session token not found or expired.");
-  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(document.iv, "base64url"));
-  decipher.setAuthTag(Buffer.from(document.authTag, "base64url"));
-  const session = Buffer.concat([decipher.update(Buffer.from(document.ciphertext, "base64url")), decipher.final()]).toString("utf8");
+  const session = decryptSessionValue(document);
   await (await collection()).updateOne({ _id: document._id }, { $set: { consumedAt: new Date() } });
   return session;
 }

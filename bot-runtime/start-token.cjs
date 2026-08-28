@@ -1,23 +1,12 @@
-const portalUrl = (process.env.FIREBOX_PORTAL_URL || "").replace(/\/$/, "");
-const token = (process.env.SESSION_TOKEN || "").trim();
+const { resolveSessionFromToken } = require("./token-bootstrap.cjs");
 
 async function resolveSession() {
   if (process.env.SESSION_ID) return process.env.SESSION_ID;
-  if (!portalUrl || !token) {
-    throw new Error("Set FIREBOX_PORTAL_URL and SESSION_TOKEN, or provide SESSION_ID directly.");
-  }
-  const response = await fetch(`${portalUrl}/api/trpc/pairing.resolveBotToken`, {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-firebox-runtime-secret": process.env.JWT_SECRET || "" },
-    body: JSON.stringify({ 0: { json: { token } } }),
+  return resolveSessionFromToken({
+    portalUrl: process.env.FIREBOX_PORTAL_URL,
+    token: process.env.SESSION_TOKEN,
+    runtimeSecret: process.env.JWT_SECRET,
   });
-  if (!response.ok) throw new Error(`Firebox token exchange failed with HTTP ${response.status}.`);
-  const body = await response.json();
-  const session = body?.[0]?.result?.data?.json?.session;
-  if (typeof session !== "string" || !session.startsWith("FIREBOX-BOT~")) {
-    throw new Error("Firebox returned no valid session for this token.");
-  }
-  return session;
 }
 
 resolveSession()
