@@ -104,3 +104,5 @@
 - [ ] Fix confirmed delayed 515 reconnect path: scheduled reconnect emits no replacement-socket-created milestone and leaves the request pending
 
 - [x] Push the validated delayed 515 reconnect fix to bgithinji927-source/firebox-pairing main for Railway deployment
+
+- [ ] Verify first-time short-token handoff appears in the linked portal state and is backed by the encrypted MongoDB session

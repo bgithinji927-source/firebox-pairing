@@ -22,6 +22,12 @@ describe("515 reconnect lifecycle", () => {
     expect(markReconnectFailure(record)).toBe(false);
   });
 
+  it("does not publish linked status before the vault finishes token creation", () => {
+    expect(source.indexOf("await storeSession(current.session)")).toBeGreaterThan(-1);
+    expect(source.indexOf('current.status = "linked"')).toBeGreaterThan(source.indexOf("await storeSession(current.session)"));
+    expect(source).toContain("[Pairing] short token ready");
+  });
+
   it("keeps replacement-socket diagnostics free of credentials", () => {
     const diagnosticLines = source.split("\n").filter(line => line.includes("reconnect") || line.includes("WhatsApp socket update"));
     expect(diagnosticLines.join("\n")).toContain("[Pairing] scheduling WhatsApp reconnect");

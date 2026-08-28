@@ -138,14 +138,18 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
           }
           if (update.connection === "open") {
             console.info("[Pairing] WhatsApp socket linked", { requestId: id });
-            current.status = "linked";
             current.qr = undefined;
             current.session = await serializeAuthState(authDir);
-            if (isSessionVaultConfigured()) {
+            const vaultConfigured = isSessionVaultConfigured();
+            console.info("[Pairing] session vault check", { requestId: id, configured: vaultConfigured });
+            if (vaultConfigured) {
+              console.info("[Pairing] storing linked session", { requestId: id });
               const stored = await storeSession(current.session);
               current.token = stored.token;
+              console.info("[Pairing] short token ready", { requestId: id });
               startEmbeddedBot(id, current.token);
             }
+            current.status = "linked";
             await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
             const delivered = current.token ? await attemptSessionDelivery(activeSocket, current.token, id) : false;
             current.error = current.token
