@@ -102,3 +102,5 @@
 - [ ] Verify Railway is serving the latest Firebox commit; current logs predate the reconnect diagnostics
 
 - [ ] Fix confirmed delayed 515 reconnect path: scheduled reconnect emits no replacement-socket-created milestone and leaves the request pending
+
+- [ ] Push the validated delayed 515 reconnect fix to bgithinji927-source/firebox-pairing main for Railway deployment
