@@ -18,6 +18,7 @@ export function startEmbeddedBot(requestId: string, token: string) {
   }
   const previous = workers.get(requestId);
   previous?.kill("SIGTERM");
+  console.info("[BotRuntime] starting embedded worker", { requestId });
   const child = spawn(process.execPath, [entry], {
     cwd: process.cwd(),
     detached: false,
@@ -25,9 +26,15 @@ export function startEmbeddedBot(requestId: string, token: string) {
     env: { ...process.env, FIREBOX_PORTAL_URL: portalUrl, SESSION_TOKEN: token, SESSION_ID: "" },
   });
   workers.set(requestId, child);
-  child.once("exit", (_code, _signal) => {
+  child.once("error", error => {
+    console.error("[BotRuntime] embedded worker error", { requestId, error: error instanceof Error ? error.message : String(error) });
     if (workers.get(requestId) === child) workers.delete(requestId);
   });
+  child.once("exit", (code, signal) => {
+    console.warn("[BotRuntime] embedded worker exited", { requestId, code, signal });
+    if (workers.get(requestId) === child) workers.delete(requestId);
+  });
+  console.info("[BotRuntime] embedded worker started", { requestId, pid: child.pid });
   return true;
 }
 

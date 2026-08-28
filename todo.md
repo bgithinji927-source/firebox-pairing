@@ -110,3 +110,5 @@
 - [ ] Resolve reveal-only fallback after pairing; portal still receives no short token from the vault flow
 
 - [ ] Diagnose MongoDB variable expansion or connectivity despite MONGODB_URI=${{MongoDB.MONGO_URL}} being configured
+
+- [ ] Diagnose embedded bot runtime after short token ready; current Railway evidence does not show worker startup or command response
