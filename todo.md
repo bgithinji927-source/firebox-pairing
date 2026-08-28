@@ -36,7 +36,7 @@
 - [x] Isolate harmless public-mode Missing session cookie logs from pairing routes
 - [ ] Verify Railway is deploying the public-mode revision instead of an older authenticated build
 - [ ] Verify Railway deployment age is newer than the latest Firebox GitHub push
-- [ ] Diagnose why Railway is not detecting the latest Firebox GitHub commit
+- [x] Diagnose why Railway is not detecting the latest Firebox GitHub commit: the latest checkpoint was on the Manus remote while GitHub main remained at the older a423 revision
 - [ ] Confirm Railway is connected to bgithinji927-source/firebox-pairing on main
 - [x] Update public UI copy to describe the shared embedded runtime instead of visitor bot deployment
 - [x] Extend pairing lifetime to five minutes and align UI copy and coverage
@@ -100,3 +100,5 @@
 - [ ] Investigate and fix the live Railway post-515 pairing failure; diagnostics alone did not restore linked/token completion
 
 - [ ] Verify Railway is serving the latest Firebox commit; current logs predate the reconnect diagnostics
+
+- [ ] Fix confirmed delayed 515 reconnect path: scheduled reconnect emits no replacement-socket-created milestone and leaves the request pending

@@ -160,25 +160,35 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             if (shouldReconnectAfterRestartRequired(reason, current.status, Date.now(), current.expiresAt)) {
               current.error = "WhatsApp accepted the pairing. Reconnecting the Firebox worker…";
               console.info("[Pairing] scheduling WhatsApp reconnect", { requestId: id, delayMs: 250 });
-              setTimeout(() => {
-                void (async () => {
+              setTimeout(async () => {
+                console.info("[Pairing] WhatsApp reconnect timer fired", { requestId: id });
+                try {
                   const latest = sessions.get(id);
-                  if (!latest || latest.status !== "pending" || Date.now() >= latest.expiresAt) return;
-                  try {
-                    const nextSocket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
-                    socket = nextSocket;
-                    sockets.set(id, nextSocket);
-                    bindSocket(nextSocket);
-                    console.info("[Pairing] WhatsApp reconnect socket created", { requestId: id });
-                  } catch (error) {
-                    console.error("[Pairing] WhatsApp reconnect failed", { requestId: id, error: error instanceof Error ? error.message : String(error) });
-                    const currentAfterReconnectFailure = sessions.get(id);
-                    if (currentAfterReconnectFailure && markReconnectFailure(currentAfterReconnectFailure)) {
-                      await safeSavePairing({ id, phone, status: "failed", expiresAt, requesterOpenId });
-                    }
-                    sockets.delete(id);
+                  if (!latest) {
+                    console.warn("[Pairing] WhatsApp reconnect skipped", { requestId: id, reason: "request-missing" });
+                    return;
                   }
-                })();
+                  if (latest.status !== "pending") {
+                    console.warn("[Pairing] WhatsApp reconnect skipped", { requestId: id, reason: `status-${latest.status}` });
+                    return;
+                  }
+                  if (Date.now() >= latest.expiresAt) {
+                    console.warn("[Pairing] WhatsApp reconnect skipped", { requestId: id, reason: "request-expired" });
+                    return;
+                  }
+                  const nextSocket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
+                  socket = nextSocket;
+                  sockets.set(id, nextSocket);
+                  bindSocket(nextSocket);
+                  console.info("[Pairing] WhatsApp reconnect socket created", { requestId: id });
+                } catch (error) {
+                  console.error("[Pairing] WhatsApp reconnect failed", { requestId: id, error: error instanceof Error ? error.message : String(error) });
+                  const currentAfterReconnectFailure = sessions.get(id);
+                  if (currentAfterReconnectFailure && markReconnectFailure(currentAfterReconnectFailure)) {
+                    await safeSavePairing({ id, phone, status: "failed", expiresAt, requesterOpenId });
+                  }
+                  sockets.delete(id);
+                }
               }, 250);
               return;
             }
