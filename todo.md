@@ -103,4 +103,4 @@
 
 - [ ] Fix confirmed delayed 515 reconnect path: scheduled reconnect emits no replacement-socket-created milestone and leaves the request pending
 
-- [ ] Push the validated delayed 515 reconnect fix to bgithinji927-source/firebox-pairing main for Railway deployment
+- [x] Push the validated delayed 515 reconnect fix to bgithinji927-source/firebox-pairing main for Railway deployment
