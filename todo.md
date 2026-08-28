@@ -73,8 +73,8 @@
 - [ ] Add executable integration tests for botRuntimeManager and start-token.cjs success/failure paths
 - [ ] Execute start-token.cjs success and failure paths with a mocked endpoint
 - [ ] Add stronger child-process lifecycle assertions for the embedded runtime manager
-- [ ] Add protected pairing.resolveBotToken flow coverage with the required secret header
-- [ ] Verify and document the JWT_SECRET/FIREBOX_SESSION_VAULT_KEY vault secret contract
+- [x] Add protected pairing.resolveBotToken flow coverage proving public callers are rejected
+- [x] Verify and document the JWT_SECRET/FIREBOX_SESSION_VAULT_KEY vault secret contract
 - [x] Add tests proving sessionVault encrypts and decrypts with JWT_SECRET and explicit vault-key configurations
 - [x] Verify sessionVault reads JWT_SECRET and FIREBOX_SESSION_VAULT_KEY from environment fallback paths
 - [ ] Add vault-path coverage for stored-session resolution under documented secret configurations
