@@ -83,51 +83,65 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
   // Initial save is fire-and-forget for the worker loop, but never unhandled.
   void safeSavePairing({ id, phone, status: "pending", expiresAt, requesterOpenId });
 
-  const socket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
+  let socket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
   sockets.set(id, socket);
-  socket.ev.on("creds.update", () => {
-    void saveCreds().catch(error => console.error("[Pairing] credential persistence failure", { requestId: id, error: error instanceof Error ? error.message : String(error) }));
-  });
   let resolveReady: () => void = () => undefined;
   const socketReady = new Promise<void>(resolve => { resolveReady = resolve; });
-  socket.ev.on("connection.update", update => {
-    void (async () => {
-      try {
-        if (update.connection === "connecting" || update.connection === "open") resolveReady();
-        const current = sessions.get(id);
-        if (!current) return;
-        if (update.qr && current.mode === "qr" && current.status === "pending") {
-          current.qr = await renderPairingQr(update.qr);
-        }
-        if (update.connection === "open") {
-          current.status = "linked";
-          current.qr = undefined;
-          current.session = await serializeAuthState(authDir);
-          await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
-          sockets.delete(id);
-        }
-        if (update.connection === "close") {
-          current.qr = undefined;
-          const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
-          console.warn("[Pairing] WhatsApp socket closed", { requestId: id, reason, status: current.status });
-          if (reason !== DisconnectReason.loggedOut && current.status === "pending") {
+  const bindSocket = (activeSocket: ReturnType<typeof makeWASocket>) => {
+    activeSocket.ev.on("creds.update", () => {
+      void saveCreds().catch(error => console.error("[Pairing] credential persistence failure", { requestId: id, error: error instanceof Error ? error.message : String(error) }));
+    });
+    activeSocket.ev.on("connection.update", update => {
+      void (async () => {
+        try {
+          if (update.connection === "connecting" || update.connection === "open") resolveReady();
+          const current = sessions.get(id);
+          if (!current) return;
+          if (update.qr && current.mode === "qr" && current.status === "pending") {
+            current.qr = await renderPairingQr(update.qr);
+          }
+          if (update.connection === "open") {
+            current.status = "linked";
+            current.qr = undefined;
+            current.session = await serializeAuthState(authDir);
+            await safeSavePairing({ id, phone, status: "linked", expiresAt, requesterOpenId, linkedAt: new Date() });
+            sockets.delete(id);
+          }
+          if (update.connection === "close") {
+            current.qr = undefined;
+            const reason = (update.lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
+            console.warn("[Pairing] WhatsApp socket closed", { requestId: id, reason, status: current.status });
+            if (reason === DisconnectReason.restartRequired && current.status === "pending" && Date.now() < current.expiresAt) {
+              current.error = "WhatsApp accepted the pairing. Reconnecting the Firebox worker…";
+              setTimeout(() => {
+                const nextSocket = makeWASocket({ auth: state, logger, browser: Browsers.windows("Chrome"), generateHighQualityLinkPreview: true });
+                socket = nextSocket;
+                sockets.set(id, nextSocket);
+                bindSocket(nextSocket);
+              }, 250);
+              return;
+            }
+            if (reason !== DisconnectReason.loggedOut && current.status === "pending") {
+              current.status = "failed";
+              current.error = "The WhatsApp connection closed before the device finished linking. Start a new request.";
+              await safeSavePairing({ id, phone, status: "failed", expiresAt, requesterOpenId });
+            }
+            sockets.delete(id);
+          }
+        } catch (error) {
+          console.error("[Pairing] connection update failure", { requestId: id, error: error instanceof Error ? error.message : String(error) });
+          const current = sessions.get(id);
+          if (current?.status === "pending") {
             current.status = "failed";
+            current.error = "The pairing worker encountered an internal error. Start a new request.";
             await safeSavePairing({ id, phone, status: "failed", expiresAt, requesterOpenId });
           }
           sockets.delete(id);
         }
-      } catch (error) {
-        console.error("[Pairing] connection update failure", { requestId: id, error: error instanceof Error ? error.message : String(error) });
-        const current = sessions.get(id);
-        if (current?.status === "pending") {
-          current.status = "failed";
-          current.error = "The pairing worker encountered an internal error. Start a new request.";
-          await safeSavePairing({ id, phone, status: "failed", expiresAt, requesterOpenId });
-        }
-        sockets.delete(id);
-      }
-    })();
-  });
+      })();
+    });
+  };
+  bindSocket(socket);
 
   if (!state.creds.registered) {
     try {

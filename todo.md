@@ -36,3 +36,4 @@
 - [x] Add QR pairing fallback with server-side QR lifecycle, refresh, expiry, and protected session handling
 - [x] Add QR mode controls and QR display to the Firebox pairing interface
 - [x] Add tests for QR access boundaries, expiry, and credential redaction
+- [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
