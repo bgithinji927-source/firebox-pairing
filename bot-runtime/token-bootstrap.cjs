@@ -9,7 +9,8 @@ async function resolveSessionFromToken({ portalUrl, token, runtimeSecret, fetchI
   });
   if (!response.ok) throw new Error(`Firebox token exchange failed with HTTP ${response.status}.`);
   const body = await response.json();
-  const session = body?.[0]?.result?.data?.json?.session;
+  const envelope = Array.isArray(body) ? body[0] : body;
+  const session = envelope?.result?.data?.json?.session;
   if (typeof session !== "string" || !session.startsWith("FIREBOX-BOT~")) throw new Error("Firebox returned no valid session for this token.");
   return session;
 }

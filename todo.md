@@ -114,3 +114,5 @@
 - [ ] Diagnose embedded bot runtime after short token ready; current Railway evidence does not show worker startup or command response
 
 - [ ] Fix embedded bot bootstrap exiting with code 1 immediately after short-token generation
+
+- [ ] Fix bootstrap parsing of the single tRPC resolver response; worker still exits code 1 after the request-shape correction
