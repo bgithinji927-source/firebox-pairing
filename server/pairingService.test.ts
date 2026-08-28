@@ -48,7 +48,7 @@ describe("pairing service security boundaries", () => {
     const socket = { user: { id: "254700000000:1@s.whatsapp.net" }, sendMessage: async (destination: string, payload: { text: string }) => { sent.push({ destination, text: payload.text }); } } as unknown as Parameters<typeof deliverSessionToLinkedAccount>[0];
     await deliverSessionToLinkedAccount(socket, "FIREBOX-BOT~test-session");
     expect(sent).toHaveLength(1);
-    expect(sent[0].destination).toBe("254700000000:1@s.whatsapp.net");
+    expect(sent[0].destination).toBe("254700000000@s.whatsapp.net");
     expect(sent[0].text).toContain("FIREBOX-BOT~test-session");
   });
 

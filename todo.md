@@ -45,8 +45,8 @@
 - [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
 - [ ] Fix connected WhatsApp bot not responding to incoming commands
 - [ ] Provide a secure post-pairing session handoff for use in the separate bot runtime or configuration UI
-- [x] Implement automatic session delivery to the paired WhatsApp account; live delivery verification remains pending
-- [x] Diagnose missing session delivery after a successful WhatsApp link
+- [ ] Implement automatic session delivery to the paired WhatsApp account; current live test shows self-message delivery failed
+- [x] Diagnose missing session delivery after a successful WhatsApp link; live self-message failure confirmed
 - [ ] Add a protected session paste-and-save UI in the pairing request panel
 - [x] Add unit coverage for session delivery success and missing identity failure
 - [x] Add unit coverage proving session-delivery logs never contain the credential

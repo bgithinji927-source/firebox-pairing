@@ -2,6 +2,7 @@ import makeWASocket, {
   Browsers,
   DisconnectReason,
   useMultiFileAuthState,
+  jidNormalizedUser,
 } from "@whiskeysockets/baileys";
 import { Boom } from "@hapi/boom";
 import fs from "node:fs/promises";
@@ -66,7 +67,8 @@ async function serializeAuthState(dir: string) {
 export async function deliverSessionToLinkedAccount(activeSocket: ReturnType<typeof makeWASocket>, session: string) {
   const destination = activeSocket.user?.id;
   if (!destination) throw new Error("Linked WhatsApp identity was not available for session delivery.");
-  await activeSocket.sendMessage(destination, {
+  await new Promise(resolve => setTimeout(resolve, 2_000));
+  await activeSocket.sendMessage(jidNormalizedUser(destination), {
     text: `FIREBOX SESSION\\n\\n${session}\\n\\nCopy this value into the Firebox bot service as SESSION_ID. Treat it as a live credential and never forward it.`
   });
 }
