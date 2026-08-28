@@ -28,6 +28,9 @@
 - [ ] Identify verified cause of WhatsApp rejecting generated linking codes without speculative retries
 - [x] Upgrade the pairing worker from Baileys 6.7.24 to upstream 7.0.0-rc14 and validate compatibility
 - [ ] Fix preview tRPC API Query Error: Failed to fetch at 2026-08-27 20:38:41 EAT
+- [x] Isolate harmless public-mode Missing session cookie logs from pairing routes
+- [ ] Verify Railway is deploying the public-mode revision instead of an older authenticated build
+- [x] Extend pairing lifetime to five minutes and align UI copy and coverage
 - [x] Fix Railway startup failure caused by missing OAUTH_SERVER_URL
 - [x] Remove OAuth dependency from the Firebox portal
 - [x] Preserve session redaction while running the portal in temporary public mode

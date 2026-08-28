@@ -200,7 +200,9 @@ class SDKServer {
     cookieValue: string | undefined | null
   ): Promise<{ openId: string; appId: string; name: string } | null> {
     if (!cookieValue) {
-      console.warn("[Auth] Missing session cookie");
+      // Public-mode pairing intentionally has no OAuth cookie. Avoid treating normal
+      // unauthenticated browser polling as an application error in Railway logs.
+      if (process.env.OAUTH_SERVER_URL) console.warn("[Auth] Missing session cookie");
       return null;
     }
 

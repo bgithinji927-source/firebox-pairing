@@ -35,6 +35,7 @@ const sessions = new Map<string, PairingRecord>();
 const sockets = new Map<string, ReturnType<typeof makeWASocket>>();
 const logger = P({ level: "silent" });
 const authRoot = process.env.FIREBOX_AUTH_DIR || path.join(process.cwd(), ".firebox-auth");
+export const PAIRING_LIFETIME_MS = 5 * 60_000;
 
 export function normalizePhone(input: string) {
   const phone = input.replace(/[^0-9]/g, "");
@@ -97,7 +98,7 @@ async function safeSavePairing(input: Parameters<typeof db.savePairingRequest>[0
 export async function createPairing(phoneInput: string | undefined, requesterOpenId: string, mode: PairingMode = "code"): Promise<PairingRecord> {
   const phone = mode === "qr" ? (phoneInput ? normalizePhone(phoneInput) : "qr-device") : normalizePhone(phoneInput || "");
   const id = nanoid(12);
-  const expiresAt = Date.now() + 60_000;
+  const expiresAt = Date.now() + PAIRING_LIFETIME_MS;
   const authDir = path.join(authRoot, id);
   await fs.mkdir(authDir, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
