@@ -203,7 +203,7 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
       sockets.get(id)?.end(undefined);
       sockets.delete(id);
     }
-  }, 60_500);
+  }, PAIRING_LIFETIME_MS + 500);
   return { ...record };
 }
 

@@ -46,8 +46,11 @@
 - [x] Add QR pairing fallback with server-side QR lifecycle, refresh, expiry, and protected session handling
 - [x] Add QR mode controls and QR display to the Firebox pairing interface
 - [x] Add tests for QR access boundaries, expiry, and credential redaction
-- [x] Apply QR scan recovery for Baileys 515 restart-required reconnects; live verification remains pending
+- [x] Fix the premature 60.5-second cleanup timer in the 515 reconnect lifecycle; live Railway verification remains pending
 - [ ] Fix connected WhatsApp bot not responding to incoming commands
+- [ ] Fix Bad MAC decryption failures followed by 401 linked-session closure
+- [ ] Add a safe fresh-session reset path for incompatible Signal auth state
+- [ ] Align Firebox session serialization with the embedded Jexploit runtime format
 - [ ] Provide a secure post-pairing session handoff through a server-only embedded bot runtime path
 - [x] Replace oversized WhatsApp session delivery with a short one-time token backed by the full encrypted session
 - [x] Implement the confirmed FIREBOX short-token exchange workflow
