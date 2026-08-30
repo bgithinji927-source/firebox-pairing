@@ -1,7 +1,14 @@
+const fs = require("node:fs");
 const { resolveSessionFromToken } = require("./token-bootstrap.cjs");
 
 async function resolveSession() {
   if (process.env.SESSION_ID) return process.env.SESSION_ID;
+  if (process.env.SESSION_ID_FILE) {
+    const sessionFile = process.env.SESSION_ID_FILE;
+    const session = fs.readFileSync(sessionFile, "utf8").trim();
+    fs.rmSync(sessionFile, { force: true });
+    return session;
+  }
   return resolveSessionFromToken({
     portalUrl: process.env.FIREBOX_PORTAL_URL,
     token: process.env.SESSION_TOKEN,

@@ -13,6 +13,7 @@ import { nanoid } from "nanoid";
 import * as db from "./db";
 import { getSessionVaultStatus, isSessionVaultConfigured, storeSession } from "./sessionVault";
 import { startEmbeddedBot } from "./botRuntimeManager";
+import { EMBEDDED_SESSION_PREFIX } from "./sessionFormat";
 
 export type PairingStatus = "pending" | "linked" | "expired" | "failed";
 export type PairingMode = "code" | "qr";
@@ -76,7 +77,9 @@ async function serializeAuthState(dir: string) {
     const value = await fs.readFile(path.join(dir, file));
     payload[file] = value.toString("base64");
   }
-  return `FIREBOX-BOT~${Buffer.from(JSON.stringify(payload)).toString("base64url")}`;
+  // The downloaded Jexploit runtime recognizes this prefix and decodes standard
+  // Base64. Keep the short FIREBOX token separate from this private bundle.
+  return `${EMBEDDED_SESSION_PREFIX}${Buffer.from(JSON.stringify(payload)).toString("base64")}`;
 }
 
 export async function deliverSessionToLinkedAccount(activeSocket: ReturnType<typeof makeWASocket>, session: string) {
@@ -145,7 +148,7 @@ export async function createPairing(phoneInput: string | undefined, requesterOpe
             console.info("[Pairing] session vault check", { requestId: id, ...vaultStatus });
             if (vaultConfigured) {
               console.info("[Pairing] storing linked session", { requestId: id });
-              const stored = await storeSession(current.session);
+              const stored = await storeSession(current.session, id);
               current.token = stored.token;
               console.info("[Pairing] short token ready", { requestId: id });
               startEmbeddedBot(id, current.token);

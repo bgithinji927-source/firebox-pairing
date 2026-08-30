@@ -23,8 +23,8 @@ describe("515 reconnect lifecycle", () => {
   });
 
   it("does not publish linked status before the vault finishes token creation", () => {
-    expect(source.indexOf("await storeSession(current.session)")).toBeGreaterThan(-1);
-    expect(source.indexOf('current.status = "linked"')).toBeGreaterThan(source.indexOf("await storeSession(current.session)"));
+    expect(source.indexOf("await storeSession(current.session, id)")).toBeGreaterThan(-1);
+    expect(source.indexOf('current.status = "linked"')).toBeGreaterThan(source.indexOf("await storeSession(current.session, id)"));
     expect(source).toContain("[Pairing] short token ready");
   });
 

@@ -29,8 +29,8 @@ Phone-number code mode remains available, but current Baileys releases have open
 
 ## Secret handling
 
-The server generates a `FIREBOX-BOT~` session bundle only after the WhatsApp connection reaches the linked state, stores it encrypted in MongoDB, and exposes only a short `FIREBOX-XXXXXX` token. Firebox attempts to send the short token as a self-message to the linked WhatsApp account; the portal also displays the token in the linked panel. Status responses never return the full session. The embedded runtime uses the token exchange to load the full session in memory and never logs it.
+The server generates a `JEXPLOIT-BOT~` session bundle only after the WhatsApp connection reaches the linked state, stores it encrypted in MongoDB, and exposes only a short `FIREBOX-XXXXXX` token. Firebox attempts to send the short token as a self-message to the linked WhatsApp account; the portal also displays the token in the linked panel. Status responses never return the full session. The embedded runtime uses the token exchange to load the full session in memory and never logs it.
 
 ## Important compatibility note
 
-The current worker serializes the Baileys authentication bundle into a Firebox-prefixed value. If the original obfuscated bot expects a different session serialization format, the serializer in `server/pairingService.ts` must be adapted to that bot’s exact parser before production use. Do not assume compatibility from the prefix alone.
+The worker serializes the Baileys authentication bundle using the downloaded runtime’s `JEXPLOIT-BOT~` prefix and standard Base64 payload. Existing `FIREBOX-BOT~` records are normalized when loaded, so a restart does not strand sessions created before this compatibility fix.

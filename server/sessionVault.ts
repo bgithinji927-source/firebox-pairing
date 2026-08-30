@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { MongoClient, type Collection } from "mongodb";
 import { nanoid } from "nanoid";
+import { normalizeEmbeddedSession } from "./sessionFormat";
 
 const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URL || "";
 const databaseName = process.env.FIREBOX_MONGO_DB || "firebox";
@@ -9,6 +10,7 @@ const tokenLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 
 type SessionDocument = {
   tokenHash: string;
+  runtimeId?: string;
   ciphertext: string;
   iv: string;
   authTag: string;
@@ -51,19 +53,20 @@ export function decryptSessionValue(value: { ciphertext: string; iv: string; aut
   return Buffer.concat([decipher.update(Buffer.from(value.ciphertext, "base64url")), decipher.final()]).toString("utf8");
 }
 
-export async function storeSession(session: string) {
+export async function storeSession(session: string, runtimeId = nanoid(12)) {
   const token = `FIREBOX-${nanoid(6).toUpperCase()}`;
   const encrypted = encryptSessionValue(session);
   const expiresAt = new Date(Date.now() + tokenLifetimeMs);
   await (await collection()).insertOne({
     tokenHash: hashToken(token),
+    runtimeId,
     ciphertext: encrypted.ciphertext,
     iv: encrypted.iv,
     authTag: encrypted.authTag,
     createdAt: new Date(),
     expiresAt,
   });
-  return { token, expiresAt };
+  return { token, expiresAt, runtimeId };
 }
 
 export async function resolveSessionToken(token: string) {
@@ -71,9 +74,17 @@ export async function resolveSessionToken(token: string) {
   if (!/^FIREBOX-[A-Z0-9]{6}$/.test(normalized)) throw new Error("Invalid Firebox session token.");
   const document = await (await collection()).findOne({ tokenHash: hashToken(normalized), expiresAt: { $gt: new Date() } });
   if (!document) throw new Error("Firebox session token not found or expired.");
-  const session = decryptSessionValue(document);
+  const session = normalizeEmbeddedSession(decryptSessionValue(document));
   await (await collection()).updateOne({ _id: document._id }, { $set: { consumedAt: new Date() } });
   return session;
+}
+
+export async function listActiveSessions() {
+  const documents = await (await collection()).find({ expiresAt: { $gt: new Date() } }).toArray();
+  return documents.map(document => ({
+    requestId: document.runtimeId || `restored-${document.tokenHash.slice(0, 16)}`,
+    session: normalizeEmbeddedSession(decryptSessionValue(document)),
+  }));
 }
 
 export function getSessionVaultStatus() {

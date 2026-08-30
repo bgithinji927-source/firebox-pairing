@@ -11,8 +11,11 @@ async function resolveSessionFromToken({ portalUrl, token, runtimeSecret, fetchI
   const body = await response.json();
   const envelope = Array.isArray(body) ? body[0] : body;
   const session = envelope?.result?.data?.json?.session;
-  if (typeof session !== "string" || !session.startsWith("FIREBOX-BOT~")) throw new Error("Firebox returned no valid session for this token.");
-  return session;
+  if (typeof session !== "string") throw new Error("Firebox returned no valid session for this token.");
+  if (session.startsWith("JEXPLOIT-BOT~")) return session;
+  // Migrate sessions created by older portal builds without exposing them.
+  if (session.startsWith("FIREBOX-BOT~")) return `JEXPLOIT-BOT~${session.slice("FIREBOX-BOT~".length)}`;
+  throw new Error("Firebox returned no valid session for this token.");
 }
 
 module.exports = { resolveSessionFromToken };

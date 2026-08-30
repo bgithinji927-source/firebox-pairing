@@ -1,1 +1,2 @@
 - [Dependency firewall](package-install-firewall.md) — fresh imports may need a minimal preview dependency install when unrelated lockfile archives are unavailable.
+- [Embedded bot session contract](embedded-bot-session-contract.md) — the downloaded Jexploit runtime needs its prefixed bundle format and restart-safe session delivery.
